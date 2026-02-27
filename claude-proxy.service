@@ -1,0 +1,13 @@
+[Unit]
+Description=Claude Code Proxy
+After=network.target
+
+[Service]
+ExecStart=/home/rob/.openclaw/claude-proxy-env/bin/python3 /home/rob/.openclaw/claude-proxy.py
+Restart=always
+RestartSec=5
+Environment=HOME=/home/rob
+Environment=PATH=/home/rob/.local/bin:/usr/local/bin:/usr/bin:/bin
+
+[Install]
+WantedBy=default.target
