@@ -1,10 +1,23 @@
+# Python
 __pycache__/
 *.py[cod]
 *.egg-info/
 dist/
 build/
-.env
+.eggs/
+
+# Virtual environments
 venv/
 .venv/
 claude-proxy-env/
+
+# Environment / secrets
+.env
+openclaw/auth-profiles.json
+
+# Logs
 *.log
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,45 @@
+# REST Client tests for VS Code (install "REST Client" extension by Humao)
+# Run these against the proxy running on the VM (via SSH tunnel or loopback)
+
+@base = http://127.0.0.1:19000
+
+### Health check
+GET {{base}}/
+
+### List models
+GET {{base}}/v1/models
+
+### Basic chat (non-streaming)
+POST {{base}}/v1/chat/completions
+Content-Type: application/json
+
+{
+  "model": "claude-local",
+  "messages": [
+    { "role": "user", "content": "Say hello in one sentence." }
+  ]
+}
+
+### Chat with system prompt
+POST {{base}}/v1/chat/completions
+Content-Type: application/json
+
+{
+  "model": "claude-local",
+  "messages": [
+    { "role": "system", "content": "You are a helpful assistant. Be concise." },
+    { "role": "user", "content": "What is 2 + 2?" }
+  ]
+}
+
+### Streaming chat
+POST {{base}}/v1/chat/completions
+Content-Type: application/json
+
+{
+  "model": "claude-local",
+  "stream": true,
+  "messages": [
+    { "role": "user", "content": "Count to 5." }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "providers": {
+    "local": {
+      "baseUrl": "http://127.0.0.1:19000/v1",
+      "api": "openai-completions",
+      "models": [
+        {
+          "id": "claude-local",
+          "name": "Claude Code (local)",
+          "reasoning": false,
+          "input": ["text"],
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          },
+          "contextWindow": 200000,
+          "maxTokens": 8192
+        }
+      ],
+      "apiKey": "local"
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "local": {
+      "provider": "local",
+      "apiKey": "local"
+    }
+  }
+}
