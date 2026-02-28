@@ -62,31 +62,42 @@ def extract_text(content) -> str:
         )
     return content
 
-def build_prompt(messages: list[Message]) -> str:
-    """Build a flat prompt from OpenAI-format messages."""
-    prompt_parts = []
+MAX_CONVERSATION_MESSAGES = 20  # only keep last N user/assistant messages
+
+def build_prompt(messages: list[Message]) -> tuple[str, str]:
+    """Split messages into (system_prompt, conversation_prompt).
+    Returns system text separately so it can go via --system-prompt,
+    and only keeps the last MAX_CONVERSATION_MESSAGES for context."""
+    system_parts = []
+    conversation = []
     for msg in messages:
         text = extract_text(msg.content)
         if not text:
             continue
-
         if msg.role == "system":
-            prompt_parts.append(f"[System: {text}]")
+            system_parts.append(text)
         elif msg.role == "user":
-            prompt_parts.append(text)
+            conversation.append(f"User: {text}")
         elif msg.role == "assistant":
-            prompt_parts.append(f"[Assistant previously said: {text}]")
+            conversation.append(f"Assistant: {text}")
 
-    return "\n".join(prompt_parts)
+    system_prompt = "\n".join(system_parts)
+    # Keep only recent conversation to avoid bloat
+    trimmed = conversation[-MAX_CONVERSATION_MESSAGES:]
+    return system_prompt, "\n".join(trimmed)
 
-def call_claude(prompt: str) -> str:
+def call_claude(prompt: str, system_prompt: str = "") -> str:
     """Call Claude Code CLI and return the output."""
     try:
+        cmd = [CLAUDE_CLI, "--print", "--permission-mode", "acceptEdits"]
+        if system_prompt:
+            cmd.extend(["--system-prompt", system_prompt])
         result = subprocess.run(
-            [CLAUDE_CLI, "--print"],
+            cmd,
             input=prompt,
             capture_output=True,
             text=True,
+            cwd="/home/rob/.openclaw/workspace",
             timeout=120
         )
         output = result.stdout.strip()
@@ -117,12 +128,11 @@ def chat(req: ChatRequest):
             break
     logger.info(f"TELEGRAM_IN: {last_user_text}")
 
-    prompt = build_prompt(req.messages)
-    prompt_tokens = max(1, len(prompt) // 4)
-    prompt_oneline = prompt.replace('\n', ' ')[:300]
-    logger.info(f"PROMPT: ({prompt_tokens} tokens, {len(prompt)} chars) {prompt_oneline}")
+    system_prompt, prompt = build_prompt(req.messages)
+    prompt_tokens = max(1, (len(prompt) + len(system_prompt)) // 4)
+    logger.info(f"PROMPT: ({prompt_tokens} tokens, system={len(system_prompt)} chars, conv={len(prompt)} chars)")
 
-    output = call_claude(prompt)
+    output = call_claude(prompt, system_prompt)
 
     completion_tokens = max(1, len(output) // 4)
     output_oneline = output.replace('\n', ' ')[:500]
